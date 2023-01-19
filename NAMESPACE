@@ -1,0 +1,3 @@
+useDynLib(infoCoRe)
+importFrom(Rcpp, evalCpp)
+export(test)
