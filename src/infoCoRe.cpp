@@ -36,7 +36,7 @@ void test( const arma::SpMat<double>& Adj){
   // > M1<-matrix(rpois(36,5),nrow=6)
   // > infoCoRe::test(Adj=M1)  
   //Adj.print();
-
+  
   uint_fast32_t i,N;
 
   N = Adj.n_rows;
@@ -49,120 +49,107 @@ void test( const arma::SpMat<double>& Adj){
   arma::SpMat<double> d_in  = sum(Adj,0);
   arma::SpMat<double> d_out = sum(Adj,1);
   arma::SpMat<double> d_all = d_in.t() + d_out;
-    
-  cout << d_all.n_rows << ", " << d_all.n_cols << endl;
+
+  arma::SpMat<double> D(N,N); D.diag() = d_all;
+
+  d_in.brief_print("d.in:");
+  d_out.brief_print("d.out:");
+
+  D.brief_print("D:");
+
+  // Laplacian
+  arma::SpMat<double> L(N,N); L=D-Adj;
+
+  L.brief_print("L:");
+  //cout << d_all.n_rows << ", " << d_all.n_cols << endl;
   //d_all.print();
 
+  d_in.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
+  d_out.transform( [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
+
+  d_in.brief_print("d.in:");
+  d_out.brief_print("d.out:");
+
+  // Normalised Laplacian
+  arma::SpMat<double> I; I.eye(N,N);
+  arma::SpMat<double> D_in(N,N);  D_in.diag()  = d_in;
+  arma::SpMat<double> D_out(N,N); D_out.diag() = d_out;
+
+  I.brief_print("I:");
+  D_in.brief_print("D.in:");
+  D_out.brief_print("D.out:");
+  
+  arma::SpMat<double> L_hat = D_in * (Adj+I) * D_out;
+
+  L_hat.brief_print("L.hat:");
+  
   cout << "\n";
 
-  
-  //arma::Mat<double> D(N,N);
-  //for(i=0; i<N; i++){
-  //  Adj.row(i);
-  //}
-
-  
   /*
-  // pointer to matrix object on disk
-  XPtr<FBM_RW> xSmat = Smat["address_rw"];
-  BMAcc_RW<double> Sr(xSmat); 
+  cout << "TEST find indices of non-zero ele in Adj: " << endl;
 
-  //if(model==nullptr){ cout << "create model first." << endl; return; }
+  arma::uword ii, jj, NR;
+  NR = Adj.n_cols;
+
+  vector<EDGE> edges;
   
-  arma::mat Y  = FBM2arma( Pmat ); 
-
-  
-  //--- Setup OpenMP
-  //model->setOpenMP( nCORES[0] );
-
-  //select the dataset
-  int dataset = Dataset[0];
-
-  uint_fast32_t i,j,k;
-
-  double val;
-  
-  //size of Smat
-  uint_fast32_t N = Sr.nrow();
-  
-  //set matrix (with diagonal) size
-  uint_fast32_t K = N*(N+1)/2;
-
-  //get a mapping from 2d matrix (with diagonal) to 1d array
-  if( model->map2Arr.empty() ){
-    //vector<tripleInt> map2Arr(K);
-    model->setMapSpace(K); 
-    model->mapMatrixDiag2Array( N, model->map2Arr );
+  for(ii=0; ii<NR; ii++){
+    const arma::SpSubview_col<double> cc = Adj.col(ii);
+    const arma::uvec rindx = find(cc);
+    //p2.brief_print();
+    for(jj=0; jj<rindx.n_elem; jj++){
+      edges.push_back( EDGE(ii,rindx(jj), Adj(ii,rindx(jj))) );
+    }
   }
 
-  //calculate t(Sr) * Y * Sr => t(CSFcsr) * t(Y) = res, res2 = res * CSFcsc  
-  vector<tupleCOO> Srmap, tSrmap;
- 
-  CSF* Srcsr  = new CSF(); //store Sr1 transpose in csr format
-  CSF* Srcsc  = new CSF(); //store Sr1           in csc format
+  cout << "edges size: " << edges.size() << endl;
+
+  for(i=0; i<20; i++){
+    cout << "[" << std::get<0>(edges[i]) << "," << std::get<1>(edges[i]) << "]" << endl;
+  }
   
-  model->mapSrmatrix( Sr, N, Srmap, model->map2Arr, true );//read Sr in column-major format
-
-  tSrVec( Srmap, tSrmap, N );//transpose
-
-  cout << "Y" << endl;
-  cout << Y << endl;
-
-  cout << "tSrmap" << endl;
-  for(k=0; k<tSrmap.size(); k++){
-    i = std::get<0>(tSrmap[k]);
-    j = std::get<1>(tSrmap[k]);
-    val = std::get<2>(tSrmap[k]);
-    cout << "(" << i << "," << j << ") = " << val << endl;
-  }
-
-    
-  model->mappingCOO2CSF( tSrmap, Srcsr, N, false );//store Sr in CSR format
-  model->mappingCOO2CSF(  Srmap, Srcsc, N, true  );//store Sr in CSC format
- 
-  cout << "Srcsr" << endl;
-  for(i=0; i<Srcsr->nz;i++){
-    cout << "[" << i << "] val: " << Srcsr->val[i] << ", col: " << Srcsr->col[i] << endl; 
-  }
-
-  for(i=0; i<(Srcsr->nrows+1);i++){
-    cout << "[" << i << "] row: " << Srcsr->row[i] << endl; 
-  }
-  cout << "---" << endl;
-
-
-  arma::mat res,res2;
-  model->csr_dense_tcrossprod( Srcsr,   Y, res   );
-  model->dense_csc_prod      ( res, Srcsc, res2  );
-
-  cout << "tSr * Y * Sr" << endl;
-  cout << res2 << endl;
-
-
-  arma::SpMat<double> X; X.zeros(N,N);
-  SrVec2ArmaD( X, Srmap, N );
-
-  arma::mat res3;
-  cout << "tSr * Y * Sr arma " << endl;
-  res3 = X.t() * Y * X;
-  cout << res3 << endl;
-
-  bool same = approx_equal(res2, res3, "reldiff", 0.1);
-
-  if( same ){
-    cout << "matices are the same" << endl;
-  } else {
-    cout << "matices are different" << endl;
-  }
-   
-
-  //free space
-  model->freeMapSpace();
-  std::vector<tupleCOO>().swap(Srmap);
-  std::vector<tupleCOO>().swap(tSrmap); 
-  if(Srcsr){ delete Srcsr; }
-  if(Srcsc){ delete Srcsc; }
+  //free edges memory vector
+  std::vector<EDGE>().swap(edges);
   */
+ 
   
 }
 
+// [[Rcpp::export]]
+void test2( const arma::SpMat<double>& Adj){
+
+  // Refs: 1) https://www.stats.ox.ac.uk/~cucuring/Hermitian_Clustering_AISTATS.pdf
+  
+  uint_fast32_t i,N;
+
+  N = Adj.n_rows;
+
+  Adj.brief_print("Adj:");
+
+  arma::SpMat<std::complex<double>> H; H.zeros(N,N);
+
+  arma::uword ii,jj, NR;
+  NR = Adj.n_rows;
+  
+  for(ii=0; ii<NR; ii++){
+    const arma::SpSubview_row<double> rindx = Adj.row(ii);
+    const arma::uvec cindx = find(rindx);
+    for(jj=0; jj<cindx.n_elem; jj++){
+
+      double we_itoj = Adj.at(ii,cindx(jj));
+      double we_jtoi = Adj.at(cindx(jj),ii);
+
+      std::complex<double> complex_itoj = (we_itoj - we_jtoi) * 1i;
+
+      std::cout << "itoj: " << we_itoj << ", " << we_jtoi << ", " <<  complex_itoj << endl;
+      
+      H.at(ii,cindx(jj)) = complex_itoj;
+
+    }
+  }
+        
+    //Test if H is Hermitain
+    cout << "Is H hermitian: " << H.is_hermitian() << endl;
+
+    H.brief_print("H:");
+}

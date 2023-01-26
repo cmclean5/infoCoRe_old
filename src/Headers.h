@@ -21,6 +21,8 @@
 #include <stdlib.h>    // to use malloc and free
 #include <mm_malloc.h>
 
+#include <complex>
+
 //OpenMP header
 //#include <omp.h>
 
@@ -35,5 +37,8 @@
 using namespace arma;
 using namespace Rcpp;
 using namespace std;
+
+//store coordinates, and weight, for an edge
+typedef std::tuple<double, double, double> EDGE;
 
 #endif

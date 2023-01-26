@@ -21,9 +21,20 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// test2
+void test2(const arma::SpMat<double>& Adj);
+RcppExport SEXP _infoCoRe_test2(SEXP AdjSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
+    test2(Adj);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_infoCoRe_test", (DL_FUNC) &_infoCoRe_test, 1},
+    {"_infoCoRe_test2", (DL_FUNC) &_infoCoRe_test2, 1},
     {NULL, NULL, 0}
 };
 

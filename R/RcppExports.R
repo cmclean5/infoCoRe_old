@@ -5,3 +5,7 @@ test <- function(Adj) {
     invisible(.Call('_infoCoRe_test', PACKAGE = 'infoCoRe', Adj))
 }
 
+test2 <- function(Adj) {
+    invisible(.Call('_infoCoRe_test2', PACKAGE = 'infoCoRe', Adj))
+}
+
