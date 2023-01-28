@@ -130,24 +130,41 @@ void test2( const arma::SpMat<double>& Adj){
 
   arma::uword ii,jj, NR;
   NR = Adj.n_rows;
-  
+  std::complex<double> ZERO=0;
+
   for(ii=0; ii<NR; ii++){
     const arma::SpSubview_row<double> rindx = Adj.row(ii);
     const arma::uvec cindx = find(rindx);
     for(jj=0; jj<cindx.n_elem; jj++){
-
+      
       double we_itoj = Adj.at(ii,cindx(jj));
       double we_jtoi = Adj.at(cindx(jj),ii);
-
-      std::complex<double> complex_itoj = (we_itoj - we_jtoi) * 1i;
-
-      std::cout << "itoj: " << we_itoj << ", " << we_jtoi << ", " <<  complex_itoj << endl;
       
-      H.at(ii,cindx(jj)) = complex_itoj;
+      std::complex<double> H_itoj = H.at(ii,cindx(jj));
+      std::complex<double> H_jtoi = H.at(cindx(jj),ii);
+      
+      if( H.at(ii,cindx(jj)) == ZERO || H.at(cindx(jj),ii) == ZERO ){
 
+          if( we_itoj == we_jtoi ){ H.at(ii,cindx(jj))=we_itoj; H.at(cindx(jj),ii)=we_itoj; }
+
+          if( we_itoj != 0 && we_jtoi == 0 ){ H.at(ii,cindx(jj)) = we_itoj*1i; }
+
+          if( we_itoj == 0 && we_jtoi != 0 ){ H.at(cindx(jj),ii) = -we_itoj*1i; }
+          
+        }
+      
+        //cout << "(" << ii << ", " << cindx(jj) << ") " << we_itoj << " - "
+        //   << "(" << cindx(jj)  << ", " << ii << ") " << we_jtoi << endl;
+      
+      //std::complex<double> complex_itoj = (we_itoj - we_jtoi) * 1i;
+
+      //std::cout << "itoj: " << we_itoj << ", " << we_jtoi << ", " <<  complex_itoj << endl;
+      
+      //H.at(ii,cindx(jj)) = complex_itoj;
+      
     }
-  }
-        
+  } 
+  
     //Test if H is Hermitain
     cout << "Is H hermitian: " << H.is_hermitian() << endl;
 
