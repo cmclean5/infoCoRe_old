@@ -118,55 +118,48 @@ void test( const arma::SpMat<double>& Adj){
 // [[Rcpp::export]]
 void test2( const arma::SpMat<double>& Adj){
 
-  // Refs: 1) https://www.stats.ox.ac.uk/~cucuring/Hermitian_Clustering_AISTATS.pdf
-  
-  uint_fast32_t i,N;
-
-  N = Adj.n_rows;
-
+  // Refs: 1) https://www.stats.ox.ac.uk/~cucuring/Hermitian_Clustering_AISTATS.pdf  
+ 
   Adj.brief_print("Adj:");
 
+  arma::uword i,j,ii,jj,N;
+  N = Adj.n_rows;
+
   arma::SpMat<std::complex<double>> H; H.zeros(N,N);
-
-  arma::uword ii,jj, NR;
-  NR = Adj.n_rows;
-  std::complex<double> ZERO=0;
-
-  for(ii=0; ii<NR; ii++){
+  
+  for(ii=0; ii<N; ii++){
     const arma::SpSubview_row<double> rindx = Adj.row(ii);
     const arma::uvec cindx = find(rindx);
     for(jj=0; jj<cindx.n_elem; jj++){
-      
-      double we_itoj = Adj.at(ii,cindx(jj));
-      double we_jtoi = Adj.at(cindx(jj),ii);
-      
-      std::complex<double> H_itoj = H.at(ii,cindx(jj));
-      std::complex<double> H_jtoi = H.at(cindx(jj),ii);
-      
-      if( H.at(ii,cindx(jj)) == ZERO || H.at(cindx(jj),ii) == ZERO ){
 
-          if( we_itoj == we_jtoi ){ H.at(ii,cindx(jj))=we_itoj; H.at(cindx(jj),ii)=we_itoj; }
+      // Define the Adj. matrix rows and column indices.
+      i = ii;
+      j = cindx(jj);
 
-          if( we_itoj != 0 && we_jtoi == 0 ){ H.at(ii,cindx(jj)) = we_itoj*1i; }
+      //std::complex<double> we(0,Adj.at(i,j));
+      //H.at(i,j) = we;
+      
+      
+      // Deine the edge weight as a complex number
+      std::complex<double> we(0,Adj.at(i,j));
+      
+      if( i <= j ){
+        // if out-going edges, or edges in both directions
 
-          if( we_itoj == 0 && we_jtoi != 0 ){ H.at(cindx(jj),ii) = -we_itoj*1i; }
-          
-        }
-      
-        //cout << "(" << ii << ", " << cindx(jj) << ") " << we_itoj << " - "
-        //   << "(" << cindx(jj)  << ", " << ii << ") " << we_jtoi << endl;
-      
-      //std::complex<double> complex_itoj = (we_itoj - we_jtoi) * 1i;
-
-      //std::cout << "itoj: " << we_itoj << ", " << we_jtoi << ", " <<  complex_itoj << endl;
-      
-      //H.at(ii,cindx(jj)) = complex_itoj;
+        // edges in both directions
+        if( i == j ){ H.at(i,j) = we*std::conj(we); }
+        // out-going edges
+        else        { H.at(i,j) = we; H.at(j,i) = std::conj(we); }
+        // in-coming edges
+      } else        { H.at(j,i) = we; H.at(i,j) = std::conj(we); }
       
     }
-  } 
-  
-    //Test if H is Hermitain
-    cout << "Is H hermitian: " << H.is_hermitian() << endl;
+  }
+
+
+  //Check H is Hermitain
+  cout << "Is H hermitian: " << H.is_hermitian() << endl;
 
     H.brief_print("H:");
+
 }
