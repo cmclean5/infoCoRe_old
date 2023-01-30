@@ -27,6 +27,8 @@
 // doi: DOI: 10.1103/PhysRevResearch.4.033196
 // website: https://journals.aps.org/prresearch/pdf/10.1103/PhysRevResearch.4.033196
 
+
+
 // [[Rcpp::export]]
 void test( const arma::SpMat<double>& Adj){
 //void test( const arma::Mat<double>& Adj){
@@ -58,8 +60,9 @@ void test( const arma::SpMat<double>& Adj){
   D.brief_print("D:");
 
   // Laplacian
+  //arma::SpMat<double> L(N,N); L=D-Adj;
   arma::SpMat<double> L(N,N); L=D-Adj;
-
+  
   L.brief_print("L:");
   //cout << d_all.n_rows << ", " << d_all.n_cols << endl;
   //d_all.print();
@@ -116,47 +119,142 @@ void test( const arma::SpMat<double>& Adj){
 }
 
 // [[Rcpp::export]]
-void test2( const arma::SpMat<double>& Adj){
+void test2( const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted=0){
 
-  // Refs: 1) https://www.stats.ox.ac.uk/~cucuring/Hermitian_Clustering_AISTATS.pdf  
- 
-  Adj.brief_print("Adj:");
+  // Refs: 1) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
+  // Refs: 2) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
+  // Refs: 3) https://www.stats.ox.ac.uk/~cucuring/Hermitian_Clustering_AISTATS.pdf  
 
-  arma::uword i,j,ii,jj,N;
-  N = Adj.n_rows;
+  arma::uword i,j,ii,jj,N,option_we;
 
-  arma::SpMat<std::complex<double>> H; H.zeros(N,N);
+  option_we = weighted[0];
   
-  for(ii=0; ii<N; ii++){
-    const arma::SpSubview_row<double> rindx = Adj.row(ii);
-    const arma::uvec cindx = find(rindx);
-    for(jj=0; jj<cindx.n_elem; jj++){
+  Adj.brief_print("Adj:");
+  
+  N = Adj.n_rows;  
+  
+  arma::SpMat<std::complex<double>> H; H.zeros(N,N);
 
-      // Define the Adj. matrix rows and column indices.
-      i = ii;
-      j = cindx(jj);
+  if( option_we == 0 ){
+    //unweighted    
+  
+    for(ii=0; ii<N; ii++){
+      const arma::SpSubview_row<double> rindx = Adj.row(ii);
+      const arma::uvec cindx = find(rindx);
+      for(jj=0; jj<cindx.n_elem; jj++){
 
-      // Deine the edge weight as a complex number
-      double we_ij=Adj.at(i,j);
-      std::complex<double> cWe(0,we_ij);
-      
-      if( i <= j ){
-        // if out-going edges, or edges in both directions
+        // Define the Adj. matrix rows and column indices.
+        i = ii;
+        j = cindx(jj);
 
-        // edges in both directions
-        if( i == j ){ H.at(i,j) = we_ij; }
-        // out-going edges
-        else        { H.at(i,j) = cWe; H.at(j,i) = std::conj(cWe); }
-        // in-coming edges
-      } else        { H.at(j,i) = cWe; H.at(i,j) = std::conj(cWe); }
-      
+        // Find edge weights
+        double we_ij=Adj.at(i,j);
+        double we_ji=Adj.at(j,i);
+
+        // Build Hermitain matrix
+        if( we_ij > 0 && we_ji > 0 ){
+          // edge in both directions
+          std::complex<double> bidir(1,0);
+          H.at(i,j) = bidir;
+        } else {
+          if( we_ij > 0 && we_ji == 0 ){
+            // out-going edge
+            std::complex<double> cWe_ij(0,1);
+            H.at(i,j) = cWe_ij; H.at(j,i) = std::conj(cWe_ij);
+          } else { 
+            // in-coming edge
+            std::complex<double> cWe_ji(0,1);        
+            H.at(j,i) = cWe_ji; H.at(i,j) = std::conj(cWe_ji);
+          }
+        }
+      }
     }
+
+  } else {
+    //weighted
+    
+     for(ii=0; ii<N; ii++){
+      const arma::SpSubview_row<double> rindx = Adj.row(ii);
+      const arma::uvec cindx = find(rindx);
+      for(jj=0; jj<cindx.n_elem; jj++){
+
+        // Define the Adj. matrix rows and column indices.
+        i = ii;
+        j = cindx(jj);
+
+        // Find edge weights
+        double we_ij=Adj.at(i,j);
+        double we_ji=Adj.at(j,i);
+
+        // Build Hermitain matrix
+        if( we_ij > 0 && we_ji > 0 ){
+          // edge in both directions
+          std::complex<double> bidir((we_ij-we_ji),0);
+          H.at(i,j) = bidir;
+        } else {
+          if( we_ij > 0 && we_ji == 0 ){
+            // out-going edge
+            std::complex<double> cWe_ij(0,we_ij);
+            H.at(i,j) = cWe_ij; H.at(j,i) = std::conj(cWe_ij);
+          } else { 
+            // in-coming edge
+            std::complex<double> cWe_ji(0,we_ji);        
+            H.at(j,i) = cWe_ji; H.at(i,j) = std::conj(cWe_ji);
+          }
+        }
+      }
+    }
+     
   }
 
 
   //Check H is Hermitain
-  cout << "Is H hermitian: " << H.is_hermitian() << endl;
+  cout << "Is H hermitian:  " << H.is_hermitian() << endl;
+  cout << "Is H symmetric:  " << H.is_symmetric() << endl;
+  //cout << "Is H her & symm: " << H.is_sympd() << endl;
+   
+  H.brief_print("H:");
 
-    H.brief_print("H:");
+  arma::SpMat<double> d_in  = sum(Adj,0);
+  arma::SpMat<double> d_out = sum(Adj,1);
+  arma::SpMat<double> d_all = d_in.t() + d_out;
+  arma::SpMat<double> D_r(N,N); D_r.diag() = d_all;
+  arma::SpMat<double> D_i(N,N); D_i.zeros();
+  
+  arma::SpMat<std::complex<double>> L(D_r,D_i);
 
+  L.brief_print("L (before):");
+  
+  // Laplacian
+  L = L-H;
+  //arma::SpMat<std::complex<double>> L(N,N); L=L.diag(D.diag())-H;
+
+  L.brief_print("L (after):");
+  
+  cout << "Is L hermitian:  " << L.is_hermitian() << endl;
+  cout << "Is L symmetric:  " << L.is_symmetric() << endl;
+  //cout << "Is L her & symm: " << L.is_sympd() << endl;
+  
+  L.brief_print("L:");
+
+  d_in.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
+  d_out.transform( [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
+
+  // Normalised Laplacian  
+  arma::SpMat<double> D_in_r(N,N);  D_in_r.diag()  = d_in;
+  arma::SpMat<double> D_out_r(N,N); D_out_r.diag() = d_out;
+
+  arma::SpMat<std::complex<double>> I; I.eye(N,N);
+  arma::SpMat<std::complex<double>> D_in (D_in_r, D_i);
+  arma::SpMat<std::complex<double>> D_out(D_out_r,D_i);
+  
+  arma::SpMat<std::complex<double>> L_hat = D_in * (H+I) * D_out;
+
+  L_hat.brief_print("L_hat:");
+
+  cout << "Is L_hat hermitian:  " << L_hat.is_hermitian() << endl;
+  cout << "Is L_hat symmetric:  " << L_hat.is_symmetric() << endl;
+  //cout << "Is L_hat her & symm: " << L_hat.is_sympd() << endl;
+
+  L_hat.brief_print("L_hat:");
 }

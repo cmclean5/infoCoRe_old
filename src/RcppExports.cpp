@@ -22,19 +22,20 @@ BEGIN_RCPP
 END_RCPP
 }
 // test2
-void test2(const arma::SpMat<double>& Adj);
-RcppExport SEXP _infoCoRe_test2(SEXP AdjSEXP) {
+void test2(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted);
+RcppExport SEXP _infoCoRe_test2(SEXP AdjSEXP, SEXP weightedSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
-    test2(Adj);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type weighted(weightedSEXP);
+    test2(Adj, weighted);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_infoCoRe_test", (DL_FUNC) &_infoCoRe_test, 1},
-    {"_infoCoRe_test2", (DL_FUNC) &_infoCoRe_test2, 1},
+    {"_infoCoRe_test2", (DL_FUNC) &_infoCoRe_test2, 2},
     {NULL, NULL, 0}
 };
 
