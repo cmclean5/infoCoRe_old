@@ -136,22 +136,19 @@ void test2( const arma::SpMat<double>& Adj){
       i = ii;
       j = cindx(jj);
 
-      //std::complex<double> we(0,Adj.at(i,j));
-      //H.at(i,j) = we;
-      
-      
       // Deine the edge weight as a complex number
-      std::complex<double> we(0,Adj.at(i,j));
+      double we_ij=Adj.at(i,j);
+      std::complex<double> cWe(0,we_ij);
       
       if( i <= j ){
         // if out-going edges, or edges in both directions
 
         // edges in both directions
-        if( i == j ){ H.at(i,j) = we*std::conj(we); }
+        if( i == j ){ H.at(i,j) = we_ij; }
         // out-going edges
-        else        { H.at(i,j) = we; H.at(j,i) = std::conj(we); }
+        else        { H.at(i,j) = cWe; H.at(j,i) = std::conj(cWe); }
         // in-coming edges
-      } else        { H.at(j,i) = we; H.at(i,j) = std::conj(we); }
+      } else        { H.at(j,i) = cWe; H.at(i,j) = std::conj(cWe); }
       
     }
   }
