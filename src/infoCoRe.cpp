@@ -30,45 +30,54 @@
 
 
 // [[Rcpp::export]]
-void test( const arma::SpMat<double>& Adj){
+arma::SpMat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm=1){
   //undirected network
   
-  arma::uword N;
+  arma::uword N, option_norm;
 
+  option_norm = norm[0];
+  
   N = Adj.n_rows;
 
   arma::SpMat<double> d = sum(Adj,0);
   arma::SpMat<double> D(N,N); D.diag() = d;
 
-  D.brief_print("D:");
+  //D.brief_print("D:");
 
   // Laplacian
   arma::SpMat<double> L(N,N); L=D-Adj;
   
-  L.brief_print("L:");
+  //L.brief_print("L:");
 
-  D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
-
-  // Normalised Laplacian
-  arma::SpMat<double> L_hat(N,N); L_hat = eye(N,N) - D * Adj * D;
-
-  L_hat.brief_print("L.hat:");
+  if( option_norm==1 ){
   
+    D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
+
+    // Normalised Laplacian
+    L = eye(N,N) - D * Adj * D;
+
+    //L_hat.brief_print("L.hat:");
+
+  }
+
+  return L;
+    
 }
 
 // [[Rcpp::export]]
-void test2( const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted=0){
+arma::SpMat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& Adj,
+                                                     Rcpp::IntegerVector weighted=0,
+                                                     Rcpp::IntegerVector norm=1){
   //Mat<std::complex<double>>
   
   // Refs: 1) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
   // Refs: 2) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
   // Refs: 3) https://www.stats.ox.ac.uk/~cucuring/Hermitian_Clustering_AISTATS.pdf  
-
-  arma::uword i,j,ii,jj,N,option_we;
-
-  option_we = weighted[0];
   
-  Adj.brief_print("Adj:");
+  arma::uword i,j,ii,jj,N,option_we,option_norm;
+
+  option_we   = weighted[0];
+  option_norm = norm[0];
   
   N = Adj.n_rows;  
   
@@ -146,32 +155,22 @@ void test2( const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted=0){
      
   }
 
-
-  //Check H is Hermitain
-  cout << "Is H hermitian:  " << H.is_hermitian() << endl;
-  cout << "Is H symmetric:  " << H.is_symmetric() << endl;
-   
-  H.brief_print("H:");
-
   // Laplacian, using in and out-degree
   arma::SpMat<double> d = sum(Adj,0).t() + sum(Adj,1);
   arma::SpMat<double> D(N,N); D.diag() = d;
   
   arma::SpMat<std::complex<double>> L(N,N); L=D-H;
   
-  L.brief_print("L:");
-
-  // Normalised Laplacian
-  D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
+  if( option_norm==1 ){
+    
+    // Normalised Laplacian
+    D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
   
-  arma::SpMat<std::complex<double>> L_hat(N,N); L_hat = eye(N,N) - D * H * D;
+    //arma::SpMat<std::complex<double>> L_hat(N,N);
+    L = eye(N,N) - D * H * D;
 
-  L_hat.brief_print("L_hat:");
-
-  cout << "Is L_hat hermitian:  " << L_hat.is_hermitian() << endl;
-  cout << "Is L_hat symmetric:  " << L_hat.is_symmetric() << endl;
-  //cout << "Is L_hat her & symm: " << L_hat.is_sympd() << endl;
-
-  //return L_hat;
+  }
+  
+  return L;
   
 }

@@ -23,15 +23,8 @@
 
 #include <complex>
 
-//OpenMP header
-//#include <omp.h>
-
 //Armadillo
 #include <RcppArmadillo.h>
-//#include <armadillo>
-
-//bigstatsr
-//#include <bigstatsr/BMAcc.h>
 
 //Name space
 using namespace arma;
