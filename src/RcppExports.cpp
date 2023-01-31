@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // norm_laplacian
-arma::SpMat<double> norm_laplacian(const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm);
+arma::Mat<double> norm_laplacian(const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm);
 RcppExport SEXP _infoCoRe_norm_laplacian(SEXP AdjSEXP, SEXP normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -24,7 +24,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // norm_laplacian_cx
-arma::SpMat<std::complex<double>> norm_laplacian_cx(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector norm);
+arma::Mat<std::complex<double>> norm_laplacian_cx(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector norm);
 RcppExport SEXP _infoCoRe_norm_laplacian_cx(SEXP AdjSEXP, SEXP weightedSEXP, SEXP normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -36,10 +36,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// driver
+void driver(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector directed, Rcpp::IntegerVector norm);
+RcppExport SEXP _infoCoRe_driver(SEXP AdjSEXP, SEXP weightedSEXP, SEXP directedSEXP, SEXP normSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type weighted(weightedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type directed(directedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type norm(normSEXP);
+    driver(Adj, weighted, directed, norm);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_infoCoRe_norm_laplacian", (DL_FUNC) &_infoCoRe_norm_laplacian, 2},
     {"_infoCoRe_norm_laplacian_cx", (DL_FUNC) &_infoCoRe_norm_laplacian_cx, 3},
+    {"_infoCoRe_driver", (DL_FUNC) &_infoCoRe_driver, 4},
     {NULL, NULL, 0}
 };
 

@@ -9,3 +9,7 @@ norm_laplacian_cx <- function(Adj, weighted = 0L, norm = 1L) {
     .Call('_infoCoRe_norm_laplacian_cx', PACKAGE = 'infoCoRe', Adj, weighted, norm)
 }
 
+driver <- function(Adj, weighted = 0L, directed = 0L, norm = 1L) {
+    invisible(.Call('_infoCoRe_driver', PACKAGE = 'infoCoRe', Adj, weighted, directed, norm))
+}
+

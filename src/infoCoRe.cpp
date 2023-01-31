@@ -28,9 +28,8 @@
 // website: https://journals.aps.org/prresearch/pdf/10.1103/PhysRevResearch.4.033196
 
 
-
 // [[Rcpp::export]]
-arma::SpMat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm=1){
+arma::Mat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm=1){
   //undirected network
   
   arma::uword N, option_norm;
@@ -39,25 +38,20 @@ arma::SpMat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::Intege
   
   N = Adj.n_rows;
 
-  arma::SpMat<double> d = sum(Adj,0);
-  arma::SpMat<double> D(N,N); D.diag() = d;
-
-  //D.brief_print("D:");
-
-  // Laplacian
-  arma::SpMat<double> L(N,N); L=D-Adj;
+  // Degree Matrix
+  arma::Mat<double> D(diagmat(sum(Adj,0)));
   
-  //L.brief_print("L:");
-
+  
+  // Laplacian
+  arma::Mat<double> L(N,N); L=D-Adj;
+  
   if( option_norm==1 ){
   
     D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
 
     // Normalised Laplacian
     L = eye(N,N) - D * Adj * D;
-
-    //L_hat.brief_print("L.hat:");
-
+    
   }
 
   return L;
@@ -65,10 +59,9 @@ arma::SpMat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::Intege
 }
 
 // [[Rcpp::export]]
-arma::SpMat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& Adj,
-                                                     Rcpp::IntegerVector weighted=0,
-                                                     Rcpp::IntegerVector norm=1){
-  //Mat<std::complex<double>>
+arma::Mat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& Adj,
+                                                   Rcpp::IntegerVector weighted=0,
+                                                   Rcpp::IntegerVector norm=1){
   
   // Refs: 1) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
   // Refs: 2) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
@@ -81,7 +74,7 @@ arma::SpMat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& 
   
   N = Adj.n_rows;  
   
-  arma::SpMat<std::complex<double>> H; H.zeros(N,N);
+  arma::Mat<std::complex<double>> H; H.zeros(N,N);
 
   if( option_we == 0 ){
     //unweighted    
@@ -155,22 +148,53 @@ arma::SpMat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& 
      
   }
 
-  // Laplacian, using in and out-degree
-  arma::SpMat<double> d = sum(Adj,0).t() + sum(Adj,1);
-  arma::SpMat<double> D(N,N); D.diag() = d;
-  
-  arma::SpMat<std::complex<double>> L(N,N); L=D-H;
+  // Degree Matrix, using in- and out-degree
+  arma::SpRow<double> d = sum(Adj,0) + sum(Adj,1).t();
+  // Now cast from Sparse matrix 'd' to dense matrix D 
+  arma::Mat<double> D(diagmat(d));
+
+  // Laplacian
+  arma::Mat<std::complex<double>> L(N,N); L=D-H;
   
   if( option_norm==1 ){
     
     // Normalised Laplacian
     D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
   
-    //arma::SpMat<std::complex<double>> L_hat(N,N);
     L = eye(N,N) - D * H * D;
 
   }
-  
+
   return L;
+  
+
+}
+
+
+// [[Rcpp::export]]
+void driver( const arma::SpMat<double>& Adj,
+             Rcpp::IntegerVector weighted=0,
+             Rcpp::IntegerVector directed=0,
+             Rcpp::IntegerVector norm=1){
+
+  arma::uword option_dir,option_we,option_norm;
+  option_dir  = directed[0];
+  option_we   = weighted[0];
+  option_norm = norm[0];
+  
+  arma::Mat<double> L;
+  arma::Mat<std::complex<double>> L_dir;
+   
+  if( option_dir == 0 ){
+    cout << "> undirected Adj: " << endl;
+    cout << "> calculate L... ";
+    L = norm_laplacian(Adj,norm=option_norm);
+    L.brief_print("L:");
+  } else {
+    cout << "> directed Adj: " << endl;
+    cout << "> calculate L... ";
+    L_dir = norm_laplacian_cx(Adj,weighted=option_we,norm=option_norm);
+    L_dir.brief_print("L:");
+  }
   
 }
