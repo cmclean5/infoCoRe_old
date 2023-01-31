@@ -28,23 +28,58 @@
 // website: https://journals.aps.org/prresearch/pdf/10.1103/PhysRevResearch.4.033196
 
 // [[Rcpp::export]]
-void get_eig( const arma::Mat<double>& x, arma::vec& eigval, arma::Mat<double>& eigvec ){
- 
+void get_eig( const arma::Mat<double>& x,
+              arma::vec& eigval,
+              arma::Mat<double>& eigvec,
+              Rcpp::IntegerVector order=1 ){
+
+  arma::uword i,option_ord;
+
+  option_ord=order[0];
+
+  // Calculate the eigenvalues & vectors of dense matrix 'x'
   arma::eig_sym(eigval, eigvec, x);
 
-  /*
-  return Rcpp::List::create(Rcpp::Named("eigenvalues")=eigval,
-                            Rcpp::Named("eigenvectors")=eigvec);
-  */
+  if( option_ord == 1 ){
+  
+    // Swap the eigenvalues since they are ordered backwards (we need largest
+    // to smallest).
+    for( i=0; i<floor(eigval.n_elem / 2.0); ++i){
+      eigval.swap_rows(i, (eigval.n_elem - 1) - i);
+    }
+  
+    // Flip the coefficients to produce the same effect.
+    eigvec = arma::fliplr(eigvec);
+
+  }
   
 }
 
 // [[Rcpp::export]]
 void get_eig_cx( const arma::Mat<std::complex<double>>& x,
                  arma::cx_vec& eigval,
-                 arma::Mat<std::complex<double>>& eigvec ){
- 
+                 arma::Mat<std::complex<double>>& eigvec,
+                 Rcpp::IntegerVector order=1 ){
+
+  arma::uword i,option_ord;
+
+  option_ord=order[0];
+  
+  // Calculate the eigenvalues & vectors of dense complex matrix 'x'
   arma::eig_gen(eigval, eigvec, x); 
+
+  if( option_ord == 1 ){
+  
+  // Swap the eigenvalues since they are ordered backwards (we need largest
+  // to smallest).
+  for( i=0; i<floor(eigval.n_elem / 2.0); ++i){
+    eigval.swap_rows(i, (eigval.n_elem - 1) - i);
+  }
+  
+  // Flip the coefficients to produce the same effect.
+  eigvec = arma::fliplr(eigvec);
+  
+  }
   
 }
 
@@ -200,26 +235,39 @@ arma::Mat<std::complex<double>> laplacian_cx( const arma::SpMat<double>& Adj,
 void driver( const arma::SpMat<double>& Adj,
              Rcpp::IntegerVector weighted=0,
              Rcpp::IntegerVector directed=0,
-             Rcpp::IntegerVector norm=1){
+             Rcpp::IntegerVector norm=1,
+             Rcpp::IntegerVector order=1){
 
-  arma::uword option_dir,option_we,option_norm;
+  arma::uword option_dir,option_we,option_norm,option_ord;
   option_dir  = directed[0];
   option_we   = weighted[0];
   option_norm = norm[0];
+  option_ord  = order[0];
   
   arma::Mat<double> L;
   arma::Mat<std::complex<double>> L_dir;
-   
+
+  arma::Mat<double> eigvec;
+  arma::vec         eigval;
+  
   if( option_dir == 0 ){
     cout << "> undirected Adj: " << endl;
     cout << "> calculate L... ";
-    L = laplacian(Adj,norm=option_norm);
+    L = laplacian(Adj, norm=option_norm);
     cout << "done!" << endl;
     L.brief_print("L:");
+
+    cout << "> TEST: " << endl;
+    get_eig(L, eigval, eigvec, order=option_ord);
+
+    eigval.brief_print("eigval:");
+
+    eigvec.brief_print("eigvec:");
+    
   } else {
     cout << "> directed Adj: " << endl;
     cout << "> calculate L... ";
-    L_dir = laplacian_cx(Adj,weighted=option_we,norm=option_norm);
+    L_dir = laplacian_cx(Adj, weighted=option_we, norm=option_norm);
     cout << "done!" << endl;
     L_dir.brief_print("L:");
   }
