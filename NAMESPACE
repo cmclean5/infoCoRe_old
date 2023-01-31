@@ -1,3 +1,7 @@
 useDynLib(infoCoRe)
 importFrom(Rcpp, evalCpp)
-export(norm_laplacian,norm_laplacian_cx,driver)
+export(laplacian,
+       get_eig,
+       get_eig_cx,
+       laplacian_cx,
+       driver)

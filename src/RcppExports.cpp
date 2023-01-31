@@ -11,28 +11,52 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// norm_laplacian
-arma::Mat<double> norm_laplacian(const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm);
-RcppExport SEXP _infoCoRe_norm_laplacian(SEXP AdjSEXP, SEXP normSEXP) {
+// get_eig
+void get_eig(const arma::Mat<double>& x, arma::vec& eigval, arma::Mat<double>& eigvec);
+RcppExport SEXP _infoCoRe_get_eig(SEXP xSEXP, SEXP eigvalSEXP, SEXP eigvecSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::Mat<double>& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eigval(eigvalSEXP);
+    Rcpp::traits::input_parameter< arma::Mat<double>& >::type eigvec(eigvecSEXP);
+    get_eig(x, eigval, eigvec);
+    return R_NilValue;
+END_RCPP
+}
+// get_eig_cx
+void get_eig_cx(const arma::Mat<std::complex<double>>& x, arma::cx_vec& eigval, arma::Mat<std::complex<double>>& eigvec);
+RcppExport SEXP _infoCoRe_get_eig_cx(SEXP xSEXP, SEXP eigvalSEXP, SEXP eigvecSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::Mat<std::complex<double>>& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::cx_vec& >::type eigval(eigvalSEXP);
+    Rcpp::traits::input_parameter< arma::Mat<std::complex<double>>& >::type eigvec(eigvecSEXP);
+    get_eig_cx(x, eigval, eigvec);
+    return R_NilValue;
+END_RCPP
+}
+// laplacian
+arma::Mat<double> laplacian(const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm);
+RcppExport SEXP _infoCoRe_laplacian(SEXP AdjSEXP, SEXP normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type norm(normSEXP);
-    rcpp_result_gen = Rcpp::wrap(norm_laplacian(Adj, norm));
+    rcpp_result_gen = Rcpp::wrap(laplacian(Adj, norm));
     return rcpp_result_gen;
 END_RCPP
 }
-// norm_laplacian_cx
-arma::Mat<std::complex<double>> norm_laplacian_cx(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector norm);
-RcppExport SEXP _infoCoRe_norm_laplacian_cx(SEXP AdjSEXP, SEXP weightedSEXP, SEXP normSEXP) {
+// laplacian_cx
+arma::Mat<std::complex<double>> laplacian_cx(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector norm);
+RcppExport SEXP _infoCoRe_laplacian_cx(SEXP AdjSEXP, SEXP weightedSEXP, SEXP normSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type weighted(weightedSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type norm(normSEXP);
-    rcpp_result_gen = Rcpp::wrap(norm_laplacian_cx(Adj, weighted, norm));
+    rcpp_result_gen = Rcpp::wrap(laplacian_cx(Adj, weighted, norm));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -51,8 +75,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_infoCoRe_norm_laplacian", (DL_FUNC) &_infoCoRe_norm_laplacian, 2},
-    {"_infoCoRe_norm_laplacian_cx", (DL_FUNC) &_infoCoRe_norm_laplacian_cx, 3},
+    {"_infoCoRe_get_eig", (DL_FUNC) &_infoCoRe_get_eig, 3},
+    {"_infoCoRe_get_eig_cx", (DL_FUNC) &_infoCoRe_get_eig_cx, 3},
+    {"_infoCoRe_laplacian", (DL_FUNC) &_infoCoRe_laplacian, 2},
+    {"_infoCoRe_laplacian_cx", (DL_FUNC) &_infoCoRe_laplacian_cx, 3},
     {"_infoCoRe_driver", (DL_FUNC) &_infoCoRe_driver, 4},
     {NULL, NULL, 0}
 };

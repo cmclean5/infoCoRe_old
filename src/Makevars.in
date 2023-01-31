@@ -1,4 +1,0 @@
-##PKG_CXXFLAGS = -I../inst/include @OPENMP_FLAG@
-##PKG_LIBS= @OPENMP_FLAG@ -lopenblas
-
-CXX_STD = CXX11

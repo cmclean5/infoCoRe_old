@@ -27,9 +27,30 @@
 // doi: DOI: 10.1103/PhysRevResearch.4.033196
 // website: https://journals.aps.org/prresearch/pdf/10.1103/PhysRevResearch.4.033196
 
+// [[Rcpp::export]]
+void get_eig( const arma::Mat<double>& x, arma::vec& eigval, arma::Mat<double>& eigvec ){
+ 
+  arma::eig_sym(eigval, eigvec, x);
+
+  /*
+  return Rcpp::List::create(Rcpp::Named("eigenvalues")=eigval,
+                            Rcpp::Named("eigenvectors")=eigvec);
+  */
+  
+}
 
 // [[Rcpp::export]]
-arma::Mat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm=1){
+void get_eig_cx( const arma::Mat<std::complex<double>>& x,
+                 arma::cx_vec& eigval,
+                 arma::Mat<std::complex<double>>& eigvec ){
+ 
+  arma::eig_gen(eigval, eigvec, x); 
+  
+}
+
+
+// [[Rcpp::export]]
+arma::Mat<double> laplacian( const arma::SpMat<double>& Adj, Rcpp::IntegerVector norm=1){
   //undirected network
   
   arma::uword N, option_norm;
@@ -39,29 +60,32 @@ arma::Mat<double> norm_laplacian( const arma::SpMat<double>& Adj, Rcpp::IntegerV
   N = Adj.n_rows;
 
   // Degree Matrix
-  arma::Mat<double> D(diagmat(sum(Adj,0)));
-  
+  arma::SpMat<double> D = diagmat(sum(Adj,0));
   
   // Laplacian
-  arma::Mat<double> L(N,N); L=D-Adj;
+  arma::SpMat<double> Ltmp(N,N); Ltmp=D-Adj;
   
   if( option_norm==1 ){
   
     D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
 
     // Normalised Laplacian
-    L = eye(N,N) - D * Adj * D;
+    Ltmp = eye(N,N) - D * Adj * D;
     
   }
 
+  // Cast from Sparse Matrix to Dense Matrix
+  arma::Mat<double> L(Ltmp);
+  
   return L;
     
 }
 
+
 // [[Rcpp::export]]
-arma::Mat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& Adj,
-                                                   Rcpp::IntegerVector weighted=0,
-                                                   Rcpp::IntegerVector norm=1){
+arma::Mat<std::complex<double>> laplacian_cx( const arma::SpMat<double>& Adj,
+                                              Rcpp::IntegerVector weighted=0,
+                                              Rcpp::IntegerVector norm=1){
   
   // Refs: 1) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
   // Refs: 2) https://stackoverflow.com/questions/67189074/hermitian-adjacency-matrix-of-digraph
@@ -74,7 +98,7 @@ arma::Mat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& Ad
   
   N = Adj.n_rows;  
   
-  arma::Mat<std::complex<double>> H; H.zeros(N,N);
+  arma::SpMat<std::complex<double>> H; H.zeros(N,N);
 
   if( option_we == 0 ){
     //unweighted    
@@ -150,26 +174,27 @@ arma::Mat<std::complex<double>> norm_laplacian_cx( const arma::SpMat<double>& Ad
 
   // Degree Matrix, using in- and out-degree
   arma::SpRow<double> d = sum(Adj,0) + sum(Adj,1).t();
-  // Now cast from Sparse matrix 'd' to dense matrix D 
-  arma::Mat<double> D(diagmat(d));
+  arma::SpMat<double> D = diagmat(d);
 
   // Laplacian
-  arma::Mat<std::complex<double>> L(N,N); L=D-H;
+  arma::SpMat<std::complex<double>> Ltmp(N,N); Ltmp=D-H;
   
   if( option_norm==1 ){
     
     // Normalised Laplacian
     D.transform(  [](double val) { return ( (val==0 ? val : pow(val,-0.5)) ); });
   
-    L = eye(N,N) - D * H * D;
+    Ltmp = eye(N,N) - D * H * D;
 
   }
 
+  // Cast from Sparse Matrix to Dense Matrix   
+  arma::Mat<std::complex<double>> L(Ltmp);
+  
   return L;
   
 
 }
-
 
 // [[Rcpp::export]]
 void driver( const arma::SpMat<double>& Adj,
@@ -188,13 +213,16 @@ void driver( const arma::SpMat<double>& Adj,
   if( option_dir == 0 ){
     cout << "> undirected Adj: " << endl;
     cout << "> calculate L... ";
-    L = norm_laplacian(Adj,norm=option_norm);
+    L = laplacian(Adj,norm=option_norm);
+    cout << "done!" << endl;
     L.brief_print("L:");
   } else {
     cout << "> directed Adj: " << endl;
     cout << "> calculate L... ";
-    L_dir = norm_laplacian_cx(Adj,weighted=option_we,norm=option_norm);
+    L_dir = laplacian_cx(Adj,weighted=option_we,norm=option_norm);
+    cout << "done!" << endl;
     L_dir.brief_print("L:");
   }
   
 }
+
