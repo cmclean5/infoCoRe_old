@@ -13,6 +13,7 @@ adj=get.adjacency(gg)
 infoCoRe::driver(Adj=as(adj,"generalMatrix"),
                  weighted=0,
                  directed=0,
+                 val_only=1,
                  norm=1)
 
 ## Directed Graph Example
@@ -25,5 +26,6 @@ adj=get.adjacency(gg)
 infoCoRe::driver(Adj=as(adj,"generalMatrix"),
                  weighted=0,
                  directed=1,
+                 val_only=1,
                  norm=1)
 

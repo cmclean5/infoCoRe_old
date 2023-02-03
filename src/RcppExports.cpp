@@ -11,29 +11,54 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// entropy
+void entropy(const arma::vec& mu, double& ent);
+RcppExport SEXP _infoCoRe_entropy(SEXP muSEXP, SEXP entSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double& >::type ent(entSEXP);
+    entropy(mu, ent);
+    return R_NilValue;
+END_RCPP
+}
+// net_operator
+void net_operator(const arma::vec& lambda, arma::vec& mu, double tau);
+RcppExport SEXP _infoCoRe_net_operator(SEXP lambdaSEXP, SEXP muSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    net_operator(lambda, mu, tau);
+    return R_NilValue;
+END_RCPP
+}
 // get_eig
-void get_eig(const arma::Mat<double>& x, arma::vec& eigval, arma::Mat<double>& eigvec, Rcpp::IntegerVector order);
-RcppExport SEXP _infoCoRe_get_eig(SEXP xSEXP, SEXP eigvalSEXP, SEXP eigvecSEXP, SEXP orderSEXP) {
+void get_eig(const arma::Mat<double>& x, arma::vec& eigval, arma::Mat<double>& eigvec, Rcpp::IntegerVector val_only, Rcpp::IntegerVector order);
+RcppExport SEXP _infoCoRe_get_eig(SEXP xSEXP, SEXP eigvalSEXP, SEXP eigvecSEXP, SEXP val_onlySEXP, SEXP orderSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::Mat<double>& >::type x(xSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type eigval(eigvalSEXP);
     Rcpp::traits::input_parameter< arma::Mat<double>& >::type eigvec(eigvecSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type val_only(val_onlySEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type order(orderSEXP);
-    get_eig(x, eigval, eigvec, order);
+    get_eig(x, eigval, eigvec, val_only, order);
     return R_NilValue;
 END_RCPP
 }
 // get_eig_cx
-void get_eig_cx(const arma::Mat<std::complex<double>>& x, arma::cx_vec& eigval, arma::Mat<std::complex<double>>& eigvec, Rcpp::IntegerVector order);
-RcppExport SEXP _infoCoRe_get_eig_cx(SEXP xSEXP, SEXP eigvalSEXP, SEXP eigvecSEXP, SEXP orderSEXP) {
+void get_eig_cx(const arma::Mat<std::complex<double>>& x, arma::vec& eigval, arma::Mat<std::complex<double>>& eigvec, Rcpp::IntegerVector val_only, Rcpp::IntegerVector order);
+RcppExport SEXP _infoCoRe_get_eig_cx(SEXP xSEXP, SEXP eigvalSEXP, SEXP eigvecSEXP, SEXP val_onlySEXP, SEXP orderSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::Mat<std::complex<double>>& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::cx_vec& >::type eigval(eigvalSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eigval(eigvalSEXP);
     Rcpp::traits::input_parameter< arma::Mat<std::complex<double>>& >::type eigvec(eigvecSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type val_only(val_onlySEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type order(orderSEXP);
-    get_eig_cx(x, eigval, eigvec, order);
+    get_eig_cx(x, eigval, eigvec, val_only, order);
     return R_NilValue;
 END_RCPP
 }
@@ -63,26 +88,29 @@ BEGIN_RCPP
 END_RCPP
 }
 // driver
-void driver(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector directed, Rcpp::IntegerVector norm, Rcpp::IntegerVector order);
-RcppExport SEXP _infoCoRe_driver(SEXP AdjSEXP, SEXP weightedSEXP, SEXP directedSEXP, SEXP normSEXP, SEXP orderSEXP) {
+void driver(const arma::SpMat<double>& Adj, Rcpp::IntegerVector weighted, Rcpp::IntegerVector directed, Rcpp::IntegerVector norm, Rcpp::IntegerVector val_only, Rcpp::IntegerVector order);
+RcppExport SEXP _infoCoRe_driver(SEXP AdjSEXP, SEXP weightedSEXP, SEXP directedSEXP, SEXP normSEXP, SEXP val_onlySEXP, SEXP orderSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type weighted(weightedSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type directed(directedSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type norm(normSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type val_only(val_onlySEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type order(orderSEXP);
-    driver(Adj, weighted, directed, norm, order);
+    driver(Adj, weighted, directed, norm, val_only, order);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_infoCoRe_get_eig", (DL_FUNC) &_infoCoRe_get_eig, 4},
-    {"_infoCoRe_get_eig_cx", (DL_FUNC) &_infoCoRe_get_eig_cx, 4},
+    {"_infoCoRe_entropy", (DL_FUNC) &_infoCoRe_entropy, 2},
+    {"_infoCoRe_net_operator", (DL_FUNC) &_infoCoRe_net_operator, 3},
+    {"_infoCoRe_get_eig", (DL_FUNC) &_infoCoRe_get_eig, 5},
+    {"_infoCoRe_get_eig_cx", (DL_FUNC) &_infoCoRe_get_eig_cx, 5},
     {"_infoCoRe_laplacian", (DL_FUNC) &_infoCoRe_laplacian, 2},
     {"_infoCoRe_laplacian_cx", (DL_FUNC) &_infoCoRe_laplacian_cx, 3},
-    {"_infoCoRe_driver", (DL_FUNC) &_infoCoRe_driver, 5},
+    {"_infoCoRe_driver", (DL_FUNC) &_infoCoRe_driver, 6},
     {NULL, NULL, 0}
 };
 

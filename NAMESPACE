@@ -1,6 +1,8 @@
 useDynLib(infoCoRe)
 importFrom(Rcpp, evalCpp)
-export(laplacian,
+export(entropy,
+       net_operator,
+       laplacian,
        get_eig,
        get_eig_cx,
        laplacian_cx,
