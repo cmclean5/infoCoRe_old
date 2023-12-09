@@ -1,2 +1,7 @@
-CXX_STD  = CXX11
-PKG_LIBS = $(LAPACK_LIBS) ${BLAS_LIBS} $(FLIBS)
+## set location of igraph headers and libs
+IGRAPH_CFLAGS  = -I/opt/homebrew/Cellar/igraph/0.10.8/include/igraph
+IGRAPH_LIBS    = -L/opt/homebrew/Cellar/igraph/0.10.8/lib -ligraph
+
+CXX_STD        = CXX11
+PKG_CPPFLAGS   = $(IGRAPH_CFLAGS)
+PKG_LIBS       = $(IGRAPH_LIBS) $(LAPACK_LIBS) ${BLAS_LIBS} $(FLIBS)

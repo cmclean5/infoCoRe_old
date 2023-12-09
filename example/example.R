@@ -29,3 +29,11 @@ infoCoRe::driver(Adj=as(adj,"generalMatrix"),
                  val_only=1,
                  norm=1)
 
+## use igraph's c libraries to decompose a graph
+infoCoRe::test(Adj=as(adj,"generalMatrix"),
+               directed=is.directed(gg),
+               loops=0
+               )
+
+## use igraph's R decompose function
+cat("> No: of components (igraph R) =", length(decompose(gg)), "\n")

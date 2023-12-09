@@ -336,3 +336,82 @@ void driver( const arma::SpMat<double>& Adj,
   
 }
 
+
+// [[Rcpp::export]]
+void test( const arma::SpMat<double>& Adj,
+           Rcpp::IntegerVector directed=0,
+           Rcpp::IntegerVector loops=0 ) {
+ 
+  //Ref:
+  //1) https://github.com/igraph/igraph/blob/master/examples/simple/igraph_decompose.c
+  //2) https://stackoverflow.com/questions/49299368/calling-igraph-from-within-rcpp
+  //3) https://igraph.org/c/doc/igraph-Generators.html
+
+  arma::uword i,j,ii,jj,N,opts_dir,opts_loops;
+
+  // graph options
+  N          = Adj.n_rows;  
+  opts_dir   = directed[0];
+  opts_loops = loops[0];
+  
+  // Convert R igraph object to igraph_t
+  igraph_matrix_t mat;
+  igraph_t graph;
+  igraph_graph_list_t complist;
+  igraph_integer_t ig; 
+  
+  // initialise matrix  
+  igraph_matrix_init(&mat, N, N);
+
+  // fill matrix 
+  for(ii=0; ii<N; ii++){
+      const arma::SpSubview_row<double> rindx = Adj.row(ii);
+      const arma::uvec cindx = find(rindx);
+      for(jj=0; jj<cindx.n_elem; jj++){
+
+        // Define the Adj. matrix rows and column indices.
+        i = ii;
+        j = cindx(jj);
+
+        // Find edge weights
+        double we_ij=Adj.at(i,j);
+
+        // Fill from input adjacency matrix
+        if( we_ij > 0 ){MATRIX(mat,i,j)=1;}
+        
+      }
+  }        
+
+  // Create graph from adjacency matrix
+  // ifelse statement: (condition) ? if true : else if false
+  igraph_adjacency(&graph,
+                   &mat,
+                   (opts_dir==0)   ? IGRAPH_ADJ_UNDIRECTED : IGRAPH_ADJ_DIRECTED,
+                   (opts_loops==0) ? IGRAPH_NO_LOOPS : IGRAPH_LOOPS_ONCE
+                   );     
+  
+  // First need to initialise individual components complist
+  igraph_graph_list_init(&complist, 0);
+
+  // Find connected components of a graph
+  // options
+  // mode=IGRAPH_WEAK ==> weakly connected components respectively.
+  // maxcompno=-1     ==> The maximum number of components to return,
+  //                      use -1 here for no limits.
+  // minelements=1    ==> The minimum number of vertices a component should contain.
+  igraph_decompose(&graph, &complist, IGRAPH_WEAK, -1, 1);
+
+  // get number of components
+  ig = igraph_graph_list_size(&complist);
+
+  cout << "> No: of components (igraph c) = " << ig << endl;
+  
+  // clear complist object we created
+  igraph_graph_list_clear(&complist);
+
+  // make sure we delete memory associated with complist object we created
+  igraph_graph_list_destroy(&complist);  
+  igraph_matrix_destroy(&mat);
+  igraph_destroy(&graph);
+  
+}

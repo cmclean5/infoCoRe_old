@@ -26,6 +26,9 @@
 //Armadillo
 #include <RcppArmadillo.h>
 
+//igraph
+#include <igraph.h>
+
 //Name space
 using namespace arma;
 using namespace Rcpp;

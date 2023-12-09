@@ -102,6 +102,18 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// test
+void test(const arma::SpMat<double>& Adj, Rcpp::IntegerVector directed, Rcpp::IntegerVector loops);
+RcppExport SEXP _infoCoRe_test(SEXP AdjSEXP, SEXP directedSEXP, SEXP loopsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::SpMat<double>& >::type Adj(AdjSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type directed(directedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type loops(loopsSEXP);
+    test(Adj, directed, loops);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_infoCoRe_entropy", (DL_FUNC) &_infoCoRe_entropy, 2},
@@ -111,6 +123,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_infoCoRe_laplacian", (DL_FUNC) &_infoCoRe_laplacian, 2},
     {"_infoCoRe_laplacian_cx", (DL_FUNC) &_infoCoRe_laplacian_cx, 3},
     {"_infoCoRe_driver", (DL_FUNC) &_infoCoRe_driver, 6},
+    {"_infoCoRe_test", (DL_FUNC) &_infoCoRe_test, 3},
     {NULL, NULL, 0}
 };
 

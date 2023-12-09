@@ -29,3 +29,7 @@ driver <- function(Adj, weighted = 0L, directed = 0L, norm = 1L, val_only = 0L, 
     invisible(.Call('_infoCoRe_driver', PACKAGE = 'infoCoRe', Adj, weighted, directed, norm, val_only, order))
 }
 
+test <- function(Adj, directed = 0L, loops = 0L) {
+    invisible(.Call('_infoCoRe_test', PACKAGE = 'infoCoRe', Adj, directed, loops))
+}
+

@@ -6,4 +6,5 @@ export(entropy,
        get_eig,
        get_eig_cx,
        laplacian_cx,
-       driver)
+       driver,
+       test)
